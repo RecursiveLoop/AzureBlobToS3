@@ -71,7 +71,10 @@ namespace AzureBlobToS3
             }
 
         }
+        class BlobItem
+        {
 
+        }
         void ListBlobContainer(string ContainerName,string Prefix)
         {
             CloudBlobClient cloudBlobClient = storageAccount.CreateCloudBlobClient();
@@ -90,11 +93,14 @@ namespace AzureBlobToS3
                     if (item.GetType() == typeof(CloudBlockBlob))
                     {
                         CloudBlockBlob blob = (CloudBlockBlob)item;
+                        
                         Console.WriteLine("Block blob {2} of length {0}: {1}", blob.Properties.Length, blob.Uri, blob.Name);
                     }
                     else if (item.GetType() == typeof(CloudPageBlob))
                     {
                         CloudPageBlob pageBlob = (CloudPageBlob)item;
+
+                        
                         Console.WriteLine("Page blob {2} of length {0}: {1}", pageBlob.Properties.Length, pageBlob.Uri, pageBlob.Name);
                     }
                     else if (item.GetType() == typeof(CloudBlobDirectory))
