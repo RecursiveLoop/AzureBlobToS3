@@ -1,0 +1,1 @@
+dotnet publish -c Release -r centos-x64

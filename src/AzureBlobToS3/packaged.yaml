@@ -1,0 +1,97 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'Azure Blob to S3 Migration Tool
+
+  A tool that migrates/synchronizes Azure Blob storage to Amazon S3.
+
+  '
+Resources:
+  AzureBlobToS3:
+    Properties:
+      CodeUri: s3://elgin.vsbuilds/1b8a90e17385568f13a9638d05438cba
+      Environment:
+        Variables:
+          PARAM1: VALUE
+      Handler: AzureBlobToS3::AzureBlobToS3.Function::FunctionHandler
+      MemorySize: 1024
+      Role:
+        Fn::GetAtt:
+        - BlobCopyLambdaRole
+        - Arn
+      Runtime: dotnetcore2.1
+      Timeout: 90
+      Tracing: Active
+    Type: AWS::Serverless::Function
+  AzureContainerNamesSSMParameter:
+    Properties:
+      Description: The Azure container names to search in.
+      Name: /AzureBlobToS3/StorageContainerNames
+      Type: StringList
+      Value: '*'
+    Type: AWS::SSM::Parameter
+  AzureStorageConnectionSSMParameter:
+    Properties:
+      Description: The Azure connection string to use to conenct to the storage blobs.
+      Name: /AzureBlobToS3/StorageConnection
+      Type: String
+      Value: '*'
+    Type: AWS::SSM::Parameter
+  BlobCopyLambdaRole:
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+        - Action:
+          - sts:AssumeRole
+          Effect: Allow
+          Principal:
+            Service:
+            - lambda.amazonaws.com
+        Version: '2012-10-17'
+      Path: /
+      Policies:
+      - PolicyDocument:
+          Statement:
+          - Action:
+            - ssm:GetParameters
+            - ssm:GetParameter
+            - ssm:GetParameterHistory
+            Effect: Allow
+            Resource:
+              Fn::Sub: arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/AzureBlobToS3/*
+          - Action:
+            - xray:PutTraceSegments
+            - xray:PutTelemetryRecords
+            - xray:GetSamplingRules
+            - xray:GetSamplingTargets
+            - xray:GetSamplingStatisticSummaries
+            Effect: Allow
+            Resource: '*'
+          - Action:
+            - lambda:InvokeFunction
+            - lambda:InvokeAsync
+            Effect: Allow
+            Resource: '*'
+          - Action:
+            - logs:*
+            Effect: Allow
+            Resource: '*'
+          - Action:
+            - sqs:SendMessage
+            - sqs:ReceiveMessage
+            - sqs:DeleteMessage
+            - sqs:ChangeMessageVisibility
+            - sqs:GetQueueUrl
+            - sqs:GetQueueAttributes
+            Effect: Allow
+            Resource:
+            - Fn::GetAtt:
+              - BlobCopyQueue
+              - Arn
+          Version: 2012-10-17
+        PolicyName: AzureBlobToS3Policy
+    Type: AWS::IAM::Role
+  BlobCopyQueue:
+    Properties:
+      QueueName: BlobCopyQueue
+      VisibilityTimeout: 90
+    Type: AWS::SQS::Queue
+Transform: AWS::Serverless-2016-10-31
