@@ -7,7 +7,7 @@ Description: 'Azure Blob to S3 Migration Tool
 Resources:
   AzureBlobToS3:
     Properties:
-      CodeUri: s3://elgin.vsbuilds/1b8a90e17385568f13a9638d05438cba
+      CodeUri: s3://elgin.vsbuilds/eb003b1ba840486eb4e45c364cf2ee6b
       Environment:
         Variables:
           PARAM1: VALUE
@@ -94,4 +94,11 @@ Resources:
       QueueName: BlobCopyQueue
       VisibilityTimeout: 90
     Type: AWS::SQS::Queue
+  S3SyncBucketNameParameter:
+    Properties:
+      Description: The name of the S3 bucket to copy data to.
+      Name: /AzureBlobToS3/S3SyncBucketName
+      Type: String
+      Value: '*'
+    Type: AWS::SSM::Parameter
 Transform: AWS::Serverless-2016-10-31

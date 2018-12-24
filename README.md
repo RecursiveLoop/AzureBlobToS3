@@ -53,7 +53,7 @@ To package additional projects / functions add them to the build.cake script "pr
 ```csharp
 var projects = new []
 {
-    sourceDir.Path + "Azure Blob to S3 Migration Tool/Azure Blob to S3 Migration Tool.csproj",
+    sourceDir.Path + "AzureBlobtoS3/AzureBlobtoS3.csproj",
     sourceDir.Path + "{PROJECT_DIR}/{PROJECT_NAME}.csproj"
 };
 ```

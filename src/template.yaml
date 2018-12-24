@@ -125,3 +125,19 @@ Resources:
             Description: 'The Azure container names to search in.'
             Type: StringList
             Value: '*'
+    
+    S3SyncBucketNameParameter:
+        Type: AWS::SSM::Parameter
+        Properties:
+            Name: '/AzureBlobToS3/S3SyncBucketName'
+            Description: 'The name of the S3 bucket to copy data to.'
+            Type: String
+            Value: '*'
+
+    S3SyncRegionParameter:
+        Type: AWS::SSM::Parameter
+        Properties:
+            Name: '/AzureBlobToS3/S3SyncRegion'
+            Description: 'The region of the S3 bucket to copy data to.'
+            Type: String
+            Value: 'ap-southeast-1'

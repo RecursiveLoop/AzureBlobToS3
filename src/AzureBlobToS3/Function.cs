@@ -9,6 +9,7 @@ using Amazon.Lambda.Core;
 using Microsoft.WindowsAzure.Storage;
 using Microsoft.WindowsAzure.Storage.Blob;
 using Shared;
+using System.Text;
 
 // Assembly attribute to enable the Lambda function's JSON input to be converted into a .NET class.
 [assembly: LambdaSerializer(typeof(Amazon.Lambda.Serialization.Json.JsonSerializer))]
@@ -30,7 +31,7 @@ namespace AzureBlobToS3
         /// <param name="input"></param>
         /// <param name="context"></param>
         /// <returns></returns>
-        public void FunctionHandler( ILambdaContext context)
+        public void FunctionHandler(ILambdaContext context)
         {
             SSMParameterManager ssmParameterManager = new SSMParameterManager();
             string storageConnectionString;
@@ -42,20 +43,37 @@ namespace AzureBlobToS3
             else
                 Console.WriteLine($"Storage connection path is set at '{storageConnectionString}'");
 
+            if (!S3Manager.CheckS3Parameters())
+                return;
+
             // Check whether the connection string can be parsed.
             if (CloudStorageAccount.TryParse(storageConnectionString, out storageAccount))
             {
                 string ContainerNames;
                 if (ssmParameterManager.TryGetValue(Constants.StorageContainerNamesSSMPath, out ContainerNames))
                 {
-                   var arrContainerNames= ContainerNames.Split(',', StringSplitOptions.RemoveEmptyEntries);
+                    var arrContainerNames = ContainerNames.Split(',', StringSplitOptions.RemoveEmptyEntries);
                     List<Task> lstTasks = new List<Task>();
-                    foreach(var ContainerName in arrContainerNames)
+                    foreach (var ContainerName in arrContainerNames)
                     {
-                        var t=Task.Factory.StartNew(() =>
-                        {
-                        ListBlobContainer(ContainerName, null);
-                        });
+                        var t = Task.Factory.StartNew(() =>
+                          {
+                              var lstBlobItems = AzureManager.ListBlobContainer(storageAccount,ContainerName, null);
+
+                              if (lstBlobItems.Count > 0)
+                              {
+
+                                  StringBuilder sb = new StringBuilder();
+
+                                  lstBlobItems.ForEach((a) =>
+                                  {
+                                     
+
+
+                                  });
+                              }
+
+                          });
                         lstTasks.Add(t);
                     }
 
@@ -71,47 +89,7 @@ namespace AzureBlobToS3
             }
 
         }
-        class BlobItem
-        {
-
-        }
-        void ListBlobContainer(string ContainerName,string Prefix)
-        {
-            CloudBlobClient cloudBlobClient = storageAccount.CreateCloudBlobClient();
-            CloudBlobContainer cloudBlobContainer = cloudBlobClient.GetContainerReference(ContainerName);
-
-            Console.WriteLine($"Listing container {ContainerName}");
-            
-            BlobContinuationToken blobContinuationToken = null;
-            do
-            {
-                var results = cloudBlobContainer.ListBlobsSegmentedAsync(Prefix,true, BlobListingDetails.None, null,blobContinuationToken,null,null).GetAwaiter().GetResult();
-                // Get the value of the continuation token returned by the listing call.
-                blobContinuationToken = results.ContinuationToken;
-                foreach (IListBlobItem item in results.Results)
-                {
-                    if (item.GetType() == typeof(CloudBlockBlob))
-                    {
-                        CloudBlockBlob blob = (CloudBlockBlob)item;
-                        
-                        Console.WriteLine("Block blob {2} of length {0}: {1}", blob.Properties.Length, blob.Uri, blob.Name);
-                    }
-                    else if (item.GetType() == typeof(CloudPageBlob))
-                    {
-                        CloudPageBlob pageBlob = (CloudPageBlob)item;
-
-                        
-                        Console.WriteLine("Page blob {2} of length {0}: {1}", pageBlob.Properties.Length, pageBlob.Uri, pageBlob.Name);
-                    }
-                    else if (item.GetType() == typeof(CloudBlobDirectory))
-                    {
-                        CloudBlobDirectory directory = (CloudBlobDirectory)item;
-                        Console.WriteLine("Directory: {0}", directory.Uri);
-                    }
-
-
-                }
-            } while (blobContinuationToken != null); // Loop while the continuation token is not null. 
-        }
+       
+       
     }
 }
