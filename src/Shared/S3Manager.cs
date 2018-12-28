@@ -1,14 +1,13 @@
 ﻿using Amazon.S3.Model;
-using Shared;
 using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace AzureBlobToS3
+namespace Shared
 {
     public class S3Manager
     {
-       
+
         static SSMParameterManager ssmParameterManager = new SSMParameterManager();
 
         static string S3BucketName;
@@ -41,11 +40,13 @@ namespace AzureBlobToS3
             return true;
         }
 
+        public static List<S3Object> GetS3Items()
+        {
+            return GetS3Items(S3BucketName);
+        }
+
         static List<S3Object> GetS3Items(string S3BucketName)
         {
-            
-
-          
 
             Amazon.S3.AmazonS3Client s3Client = new Amazon.S3.AmazonS3Client(Amazon.RegionEndpoint.GetBySystemName(S3Region));
             List<S3Object> lstResults = new List<S3Object>();
@@ -58,7 +59,7 @@ namespace AzureBlobToS3
 
                 var result = s3Client.ListObjectsAsync(new ListObjectsRequest { Marker = nextMarker, BucketName = S3BucketName }).GetAwaiter().GetResult();
                 lstResults.AddRange(result.S3Objects);
-                
+
                 isTruncated = result.IsTruncated;
                 nextMarker = result.NextMarker;
 
@@ -66,8 +67,6 @@ namespace AzureBlobToS3
 
             return lstResults;
         }
-
-        
 
     }
 }

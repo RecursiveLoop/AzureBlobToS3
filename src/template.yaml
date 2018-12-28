@@ -61,6 +61,17 @@ Resources:
                             Resource: '*'
                           - Effect: Allow
                             Action:
+                                - s3:GetObject
+                                - s3:ListBucket
+                                - s3:ListObjects
+                            Resource: 
+                                - !Join
+                                    -   ''
+                                    -   - !GetAtt AzureSyncBucket.Arn
+                                        - '/*'
+                                - !GetAtt AzureSyncBucket.Arn
+                          - Effect: Allow
+                            Action:
                                 - logs:*
                             Resource: '*'
                           - Effect: Allow
@@ -84,7 +95,16 @@ Resources:
         Type: AWS::SQS::Queue
         Properties:
             QueueName: BlobCopyQueue
-            VisibilityTimeout: 90
+            VisibilityTimeout: 900
+
+##################################################################
+#
+#  S3 Buckets
+#
+##################################################################
+
+    AzureSyncBucket:
+        Type: AWS::S3::Bucket
 
 ##################################################################
 #
@@ -102,8 +122,26 @@ Resources:
             Handler: AzureBlobToS3::AzureBlobToS3.Function::FunctionHandler
             Environment: # More info about Env Vars: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#environment-object
                 Variables:
-                    PARAM1: VALUE
+                    ComprehensiveCheck: false
+                    QueueName: !Ref BlobCopyQueue
             Tracing: Active  # https://docs.aws.amazon.com/lambda/latest/dg/lambda-x-ray.html
+
+    CopyBlobToS3:
+        Type: AWS::Serverless::Function
+        Properties:
+            CodeUri: ./artifacts/CopyAzureBlobToS3.zip
+            Runtime: dotnetcore2.1
+            MemorySize: 1024
+            Timeout: 900
+            Role: !GetAtt BlobCopyLambdaRole.Arn
+            Handler: CopyAzureBlobToS3::CopyAzureBlobToS3.Function::FunctionHandler
+            Tracing: Active
+            Events:
+                CopyBlobEvent:
+                    Type: SQS
+                    Properties:
+                        Queue: !GetAtt BlobCopyQueue.Arn
+                        BatchSize: 5
 
 ##################################################################
 #
@@ -132,7 +170,7 @@ Resources:
             Name: '/AzureBlobToS3/S3SyncBucketName'
             Description: 'The name of the S3 bucket to copy data to.'
             Type: String
-            Value: '*'
+            Value: !Ref AzureSyncBucket
 
     S3SyncRegionParameter:
         Type: AWS::SSM::Parameter

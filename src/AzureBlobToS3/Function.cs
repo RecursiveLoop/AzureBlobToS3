@@ -10,6 +10,8 @@ using Microsoft.WindowsAzure.Storage;
 using Microsoft.WindowsAzure.Storage.Blob;
 using Shared;
 using System.Text;
+using Amazon.SQS.Model;
+using Newtonsoft.Json;
 
 // Assembly attribute to enable the Lambda function's JSON input to be converted into a .NET class.
 [assembly: LambdaSerializer(typeof(Amazon.Lambda.Serialization.Json.JsonSerializer))]
@@ -58,16 +60,39 @@ namespace AzureBlobToS3
                     {
                         var t = Task.Factory.StartNew(() =>
                           {
-                              var lstBlobItems = AzureManager.ListBlobContainer(storageAccount,ContainerName, null);
+                              var lstBlobItems = AzureManager.ListBlobContainer(storageAccount, ContainerName, null);
 
                               if (lstBlobItems.Count > 0)
                               {
 
+                                  Console.WriteLine("Listing S3 items.");
+                                  var S3Objects = S3Manager.GetS3Items();
+
+                                  Console.WriteLine($"{S3Objects.Count.ToString()} items retrieved from S3.");
+
+                                  foreach (var S3Object in S3Objects)
+                                  {
+                                      Console.WriteLine($"Item retrieved from S3: {S3Object.BucketName} - {S3Object.Key} ({S3Object.Size.ToString()} bytes) - ETag {S3Object.ETag}");
+                                  }
+
                                   StringBuilder sb = new StringBuilder();
+
+                                  Amazon.SQS.AmazonSQSClient sqsClient = new Amazon.SQS.AmazonSQSClient();
+
 
                                   lstBlobItems.ForEach((a) =>
                                   {
-                                     
+                                      if (!S3Objects.Any(s => s.Key == a.BlobName && s.Size == a.Size))
+                                      {
+                                          CopyItem copyItem = new CopyItem { BlobItem = a };
+                                          // No S3 objects that match the Azure blob, copy it over
+                                          var strCopyItem = JsonConvert.SerializeObject(copyItem);
+                                          SendMessageRequest sendRequest = new SendMessageRequest { MessageBody = strCopyItem, QueueUrl = System.Environment.GetEnvironmentVariable("QueueName") };
+
+                                          var sendMessageResult = sqsClient.SendMessageAsync(sendRequest).GetAwaiter().GetResult();
+
+                                          Console.WriteLine($"Item not found in S3, adding to copy queue - {a.BlobName} - send message result: {sendMessageResult.HttpStatusCode.ToString()}");
+                                      }
 
 
                                   });
@@ -89,7 +114,7 @@ namespace AzureBlobToS3
             }
 
         }
-       
-       
+
+
     }
 }

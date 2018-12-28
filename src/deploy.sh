@@ -1,2 +1,2 @@
 sam package --template-file template.yaml --output-template-file packaged.yaml --s3-bucket elgin.vsbuilds
-aws cloudformation deploy --template-file C:\Development\AzureBlobToS3\src\AzureBlobToS3\packaged.yaml --stack-name AzureBlobToS3 --capabilities CAPABILITY_IAM
+aws cloudformation deploy --template-file packaged.yaml --stack-name AzureBlobToS3 --capabilities CAPABILITY_IAM

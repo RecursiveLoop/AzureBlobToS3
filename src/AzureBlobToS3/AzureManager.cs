@@ -4,18 +4,14 @@ using System;
 using System.Linq;
 using System.Collections.Generic;
 using System.Text;
+using Shared;
 
 namespace AzureBlobToS3
 {
     public class AzureManager
     {
-        public class BlobItem
-        {
-            public string BlobName { get; set; }
-            public string MD5 { get; set; }
-            public Type ObjectType { get; set; }
-        }
-        public static List<BlobItem> ListBlobContainer(CloudStorageAccount storageAccount,string ContainerName, string Prefix)
+       
+        public static List<AzureBlobItem> ListBlobContainer(CloudStorageAccount storageAccount, string ContainerName, string Prefix)
         {
             CloudBlobClient cloudBlobClient = storageAccount.CreateCloudBlobClient();
             CloudBlobContainer cloudBlobContainer = cloudBlobClient.GetContainerReference(ContainerName);
@@ -23,7 +19,7 @@ namespace AzureBlobToS3
             Console.WriteLine($"Listing container {ContainerName}");
 
             BlobContinuationToken blobContinuationToken = null;
-            List<BlobItem> lstBlobItems = new List<BlobItem>();
+            List<AzureBlobItem> lstBlobItems = new List<AzureBlobItem>();
 
             do
             {
@@ -35,13 +31,13 @@ namespace AzureBlobToS3
                     if (item.GetType() == typeof(CloudBlockBlob))
                     {
                         CloudBlockBlob blob = (CloudBlockBlob)item;
-                        lstBlobItems.Add(new BlobItem { BlobName = blob.Name, MD5 = blob.Properties.ETag, ObjectType = typeof(CloudBlockBlob) });
+                        lstBlobItems.Add(new AzureBlobItem { BlobName = blob.Name, MD5 = blob.Properties.ContentMD5, Size = blob.Properties.Length, ObjectType = typeof(CloudBlockBlob) });
                         Console.WriteLine("Block blob {2} of length {0}: {1}, MD5 {3}", blob.Properties.Length, blob.Uri, blob.Name, blob.Properties.ETag);
                     }
                     else if (item.GetType() == typeof(CloudPageBlob))
                     {
                         CloudPageBlob pageBlob = (CloudPageBlob)item;
-                        lstBlobItems.Add(new BlobItem { BlobName = pageBlob.Name, MD5 = pageBlob.Properties.ETag, ObjectType = typeof(CloudPageBlob) });
+                        lstBlobItems.Add(new AzureBlobItem { BlobName = pageBlob.Name, Size = pageBlob.Properties.Length, MD5 = pageBlob.Properties.ContentMD5, ObjectType = typeof(CloudPageBlob) });
 
 
                         Console.WriteLine("Page blob {2} of length {0}: {1}, MD5 {3}", pageBlob.Properties.Length, pageBlob.Uri, pageBlob.Name, pageBlob.Properties.ETag);

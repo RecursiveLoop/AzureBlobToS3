@@ -15,7 +15,8 @@ var sourceDir = Directory("./");
 var solutions = GetFiles("./**/*.sln");
 var projects = new []
 {
-    sourceDir.Path + "AzureBlobToS3/AzureBlobToS3.csproj"
+    sourceDir.Path + "AzureBlobToS3/AzureBlobToS3.csproj",
+    sourceDir.Path + "CopyAzureBlobToS3/CopyAzureBlobToS3.csproj"
 };
 
 // BUILD OUTPUT DIRECTORIES

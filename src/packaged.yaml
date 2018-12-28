@@ -7,10 +7,12 @@ Description: 'Azure Blob to S3 Migration Tool
 Resources:
   AzureBlobToS3:
     Properties:
-      CodeUri: s3://elgin.vsbuilds/eb003b1ba840486eb4e45c364cf2ee6b
+      CodeUri: s3://elgin.vsbuilds/00d6c3ece5a5286b0f6faf32b04e5339
       Environment:
         Variables:
-          PARAM1: VALUE
+          ComprehensiveCheck: false
+          QueueName:
+            Ref: BlobCopyQueue
       Handler: AzureBlobToS3::AzureBlobToS3.Function::FunctionHandler
       MemorySize: 1024
       Role:
@@ -35,6 +37,8 @@ Resources:
       Type: String
       Value: '*'
     Type: AWS::SSM::Parameter
+  AzureSyncBucket:
+    Type: AWS::S3::Bucket
   BlobCopyLambdaRole:
     Properties:
       AssumeRolePolicyDocument:
@@ -71,6 +75,21 @@ Resources:
             Effect: Allow
             Resource: '*'
           - Action:
+            - s3:GetObject
+            - s3:ListBucket
+            - s3:ListObjects
+            Effect: Allow
+            Resource:
+            - Fn::Join:
+              - ''
+              - - Fn::GetAtt:
+                  - AzureSyncBucket
+                  - Arn
+                - /*
+            - Fn::GetAtt:
+              - AzureSyncBucket
+              - Arn
+          - Action:
             - logs:*
             Effect: Allow
             Resource: '*'
@@ -92,13 +111,43 @@ Resources:
   BlobCopyQueue:
     Properties:
       QueueName: BlobCopyQueue
-      VisibilityTimeout: 90
+      VisibilityTimeout: 900
     Type: AWS::SQS::Queue
+  CopyBlobToS3:
+    Properties:
+      CodeUri: s3://elgin.vsbuilds/75062b461763060c4f010aa23c7c5f68
+      Events:
+        CopyBlobEvent:
+          Properties:
+            BatchSize: 5
+            Queue:
+              Fn::GetAtt:
+              - BlobCopyQueue
+              - Arn
+          Type: SQS
+      Handler: CopyAzureBlobToS3::CopyAzureBlobToS3.Function::FunctionHandler
+      MemorySize: 1024
+      Role:
+        Fn::GetAtt:
+        - BlobCopyLambdaRole
+        - Arn
+      Runtime: dotnetcore2.1
+      Timeout: 900
+      Tracing: Active
+    Type: AWS::Serverless::Function
   S3SyncBucketNameParameter:
     Properties:
       Description: The name of the S3 bucket to copy data to.
       Name: /AzureBlobToS3/S3SyncBucketName
       Type: String
-      Value: '*'
+      Value:
+        Ref: AzureSyncBucket
+    Type: AWS::SSM::Parameter
+  S3SyncRegionParameter:
+    Properties:
+      Description: The region of the S3 bucket to copy data to.
+      Name: /AzureBlobToS3/S3SyncRegion
+      Type: String
+      Value: ap-southeast-1
     Type: AWS::SSM::Parameter
 Transform: AWS::Serverless-2016-10-31
