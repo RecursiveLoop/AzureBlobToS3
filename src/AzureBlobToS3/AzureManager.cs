@@ -31,13 +31,13 @@ namespace AzureBlobToS3
                     if (item.GetType() == typeof(CloudBlockBlob))
                     {
                         CloudBlockBlob blob = (CloudBlockBlob)item;
-                        lstBlobItems.Add(new AzureBlobItem { BlobName = blob.Name, MD5 = blob.Properties.ContentMD5, Size = blob.Properties.Length, ObjectType = typeof(CloudBlockBlob) });
+                        lstBlobItems.Add(new AzureBlobItem { ContainerName =ContainerName, BlobName = blob.Name, MD5 = blob.Properties.ContentMD5, Size = blob.Properties.Length, ObjectTypeName = typeof(CloudBlockBlob).FullName });
                         Console.WriteLine("Block blob {2} of length {0}: {1}, MD5 {3}", blob.Properties.Length, blob.Uri, blob.Name, blob.Properties.ETag);
                     }
                     else if (item.GetType() == typeof(CloudPageBlob))
                     {
                         CloudPageBlob pageBlob = (CloudPageBlob)item;
-                        lstBlobItems.Add(new AzureBlobItem { BlobName = pageBlob.Name, Size = pageBlob.Properties.Length, MD5 = pageBlob.Properties.ContentMD5, ObjectType = typeof(CloudPageBlob) });
+                        lstBlobItems.Add(new AzureBlobItem { ContainerName = ContainerName, BlobName = pageBlob.Name, Size = pageBlob.Properties.Length, MD5 = pageBlob.Properties.ContentMD5, ObjectTypeName = typeof(CloudPageBlob).FullName });
 
 
                         Console.WriteLine("Page blob {2} of length {0}: {1}, MD5 {3}", pageBlob.Properties.Length, pageBlob.Uri, pageBlob.Name, pageBlob.Properties.ETag);

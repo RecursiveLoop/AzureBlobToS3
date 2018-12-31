@@ -4,6 +4,8 @@ using System.Linq;
 using System.Threading.Tasks;
 
 using Amazon.Lambda.Core;
+using Amazon.XRay.Recorder.Handlers.AwsSdk;
+using Microsoft.WindowsAzure.Storage;
 using Newtonsoft.Json;
 using Shared;
 
@@ -14,6 +16,13 @@ namespace CopyAzureBlobToS3
 {
     public class Function
     {
+
+        CloudStorageAccount storageAccount = null;
+
+        public Function()
+        {
+            AWSSDKHandler.RegisterXRayForAllServices();
+        }
 
         /// <summary>
         /// A simple function that takes a string and does a ToUpper
@@ -36,19 +45,30 @@ namespace CopyAzureBlobToS3
             if (!S3Manager.CheckS3Parameters())
                 return;
 
-            foreach (var record in sqsEvent.Records)
+            // Check whether the connection string can be parsed.
+            if (CloudStorageAccount.TryParse(storageConnectionString, out storageAccount))
             {
-                if (string.IsNullOrEmpty(record.Body))
-                    continue;
 
-                var copyItem = JsonConvert.DeserializeObject<CopyItem>(record.Body);
+                foreach (var record in sqsEvent.Records)
+                {
+                    if (string.IsNullOrEmpty(record.Body))
+                        continue;
 
-                if (copyItem == null || copyItem.BlobItem == null)
-                    continue;
+                    var copyItem = JsonConvert.DeserializeObject<CopyItem>(record.Body);
 
-                Console.WriteLine($"Trying to download item {copyItem.BlobItem.BlobName} from Azure blob storage to S3.");
+                    if (copyItem == null || copyItem.BlobItem == null)
+                        continue;
+
+                    Console.WriteLine($"Trying to download item {copyItem.BlobItem.BlobName} from Azure blob storage to S3.");
+
+
+
+
+                }
 
             }
+            else
+                throw new Exception("Azure storage account not properly configured.");
         }
     }
 }

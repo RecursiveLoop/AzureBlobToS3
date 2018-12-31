@@ -94,7 +94,7 @@ namespace AzureBlobToS3
                                           Console.WriteLine($"Item not found in S3, adding to copy queue - {a.BlobName} - send message result: {sendMessageResult.HttpStatusCode.ToString()}");
                                       }
 
-
+                                      
                                   });
                               }
 
