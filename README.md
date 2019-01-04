@@ -4,7 +4,7 @@ A tool that migrates/synchronizes Azure Blob storage to Amazon S3. Any files tha
 
 ## Architecture
 
-![alt text](diagram.png "Diagram")
+![alt text](Diagram.png "Diagram")
 
 ## How It Works
 
