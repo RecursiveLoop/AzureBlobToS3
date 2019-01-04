@@ -4,7 +4,7 @@ A tool that migrates/synchronizes Azure Blob storage to Amazon S3. Any files tha
 
 ## Architecture
 
-[logo]: (https://raw.githubusercontent.com/RecursiveLoop/AzureBlobToS3/master/Diagram.PNG  "Diagram")
+![alt text](https://raw.githubusercontent.com/RecursiveLoop/AzureBlobToS3/master/Diagram.PNG "Diagram")
 
 ## How It Works
 
