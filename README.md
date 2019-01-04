@@ -1,10 +1,10 @@
 # Azure Blob to S3 Migration Tool
 
-A tool that migrates/synchronizes Azure Blob storage to Amazon S3. Any files that exist in S3 without a matching name and content length will be copied over to Amazon S3.
+A tool that migrates/synchronizes Azure Blob storage to Amazon S3. Any files that exist in Azure without a matching name and content length will be copied over to Amazon S3.
 
 ## Architecture
 
-![alt text](https://raw.githubusercontent.com/RecursiveLoop/AzureBlobToS3/master/Diagram.PNG  "Diagram")
+[logo]: (https://raw.githubusercontent.com/RecursiveLoop/AzureBlobToS3/master/Diagram.PNG  "Diagram")
 
 ## How It Works
 
@@ -72,8 +72,7 @@ To package additional projects / functions add them to the build.cake script "pr
 ```csharp
 var projects = new []
 {
-    sourceDir.Path + "AzureBlobtoS3/AzureBlobtoS3.csproj",
-    sourceDir.Path + "{PROJECT_DIR}/CopyAzureBlobToS3.csproj"
+    sourceDir.Path + "{PROJECT_DIR}/{PROJECT_NAME}.csproj"
 };
 ```
 
@@ -145,7 +144,7 @@ build.ps1 --target=Test
 Given that you followed Packaging instructions then run the following to invoke your function locally:
 
 
-**Invoking function locally without API Gateway**
+**Invoking function locally**
 
 ```bash
 echo '{"lambda": "payload"}' | sam local invoke Azure Blob to S3 Migration ToolFunction
