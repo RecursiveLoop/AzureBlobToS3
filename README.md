@@ -1,13 +1,32 @@
 # Azure Blob to S3 Migration Tool
 
-A tool that migrates/synchronizes Azure Blob storage to Amazon S3.
+A tool that migrates/synchronizes Azure Blob storage to Amazon S3. Any files that exist in S3 without a matching name and content length will be copied over to Amazon S3.
+
+## Architecture
+
+![alt text](diagram.png "Diagram")
+
+## How It Works
+
+The application is deployed using AWS SAM, into two lambda functions. The first lambda function is used to detect changes between Azure and S3. Once a file is found in Azure that needs to be copied to S3, it is queued up in SQS. Another lambda function is then triggered to perform the actual copy.
+
+# IMPORTANT - Configuration - Set these
+
+This application uses EC2 Systems Manager parameter store for storing configuration. Upon deploying the SAM package, there will be the following parameters created:
+
+/AzureBlobToS3/S3SyncBucketName - the name of the S3 bucket to sync with. A bucket is created by default.
+
+/AzureBlobToS3/S3SyncRegion - the region that the S3 bucket resides in. This is ap-southeast-1 by default.
+
+/AzureBlobToS3/StorageConnection - the connection string to the Azure storage account. You must set this before running the application.
+
+/AzureBlobToS3/StorageContainerNames - the Azure storage container names to read from. This is a list of values.
 
 ## Requirements
 
 * [AWS CLI](https://aws.amazon.com/cli/) already configured with PowerUser permission
 * [AWS SAM CLI](https://github.com/awslabs/aws-sam-local) installed
 * [.NET Core 2.1](https://www.microsoft.com/net/download/) installed. Please review the [Currently Supported Patch](https://github.com/aws/aws-lambda-dotnet#version-status) for your project type.
-* [Docker](https://www.docker.com/community-edition) installed
 
 
 ## Recommended Tools for Visual Studio / Visual Studio Code Users
@@ -54,7 +73,7 @@ To package additional projects / functions add them to the build.cake script "pr
 var projects = new []
 {
     sourceDir.Path + "AzureBlobtoS3/AzureBlobtoS3.csproj",
-    sourceDir.Path + "{PROJECT_DIR}/{PROJECT_NAME}.csproj"
+    sourceDir.Path + "{PROJECT_DIR}/CopyAzureBlobToS3.csproj"
 };
 ```
 
@@ -163,11 +182,11 @@ aws cloudformation describe-stacks \
 
 ## Bringing to the next level
 
-Here are a few ideas that you can use to get more acquainted as to how this overall process works:
+* Currently, only one-way synchronisation is supported, from Azure to S3
 
-* Create an additional API resource (e.g. /hello/{proxy+}) and return the name requested through this new path
-* Update unit test to capture that
-* Package & Deploy
+* The maximum time that a file can take is 15 minutes; after this, the lambda function times out. This can be modified in future to use HTTP range gets to chunk up the file for copying.
+
+* Limited error handling on the copying.
 
 Next, you can use the following resources to know more about beyond hello world samples and how others structure their Serverless applications:
 
