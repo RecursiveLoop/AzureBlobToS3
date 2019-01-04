@@ -7,7 +7,7 @@ Description: 'Azure Blob to S3 Migration Tool
 Resources:
   AzureBlobToS3:
     Properties:
-      CodeUri: s3://elgin.vsbuilds/093f74f5273336b341a9052842ee768d
+      CodeUri: s3://elgin.vsbuilds/f1900023c6d546c8c1d06fb6477203d9
       Environment:
         Variables:
           ComprehensiveCheck: false
@@ -123,7 +123,7 @@ Resources:
     Type: AWS::SQS::Queue
   CopyBlobToS3:
     Properties:
-      CodeUri: s3://elgin.vsbuilds/bed44334b1f770ba3ba4f739c1d18cba
+      CodeUri: s3://elgin.vsbuilds/3e9e8078803c2db3b566b2b19d8aa5d3
       Events:
         CopyBlobEvent:
           Properties:

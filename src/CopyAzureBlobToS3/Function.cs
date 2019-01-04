@@ -3,8 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using Amazon.CloudWatch;
-using Amazon.CloudWatch.Model;
+
 using Amazon.Lambda.Core;
 using Amazon.XRay.Recorder.Handlers.AwsSdk;
 using Microsoft.WindowsAzure.Storage;
@@ -20,7 +19,7 @@ namespace CopyAzureBlobToS3
     {
 
         CloudStorageAccount storageAccount = null;
-
+        SSMParameterManager ssmParameterManager = new SSMParameterManager();
         public Function()
         {
             AWSSDKHandler.RegisterXRayForAllServices();
@@ -34,7 +33,7 @@ namespace CopyAzureBlobToS3
         /// <returns></returns>
         public void FunctionHandler(Amazon.Lambda.SQSEvents.SQSEvent sqsEvent, ILambdaContext context)
         {
-            SSMParameterManager ssmParameterManager = new SSMParameterManager();
+            
          
             string storageConnectionString;
 

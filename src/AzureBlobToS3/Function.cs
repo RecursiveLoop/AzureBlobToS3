@@ -21,6 +21,7 @@ namespace AzureBlobToS3
     public class Function
     {
         CloudStorageAccount storageAccount = null;
+        SSMParameterManager ssmParameterManager = new SSMParameterManager();
 
         public Function()
         {
@@ -35,7 +36,7 @@ namespace AzureBlobToS3
         /// <returns></returns>
         public void FunctionHandler(ILambdaContext context)
         {
-            SSMParameterManager ssmParameterManager = new SSMParameterManager();
+            
             string storageConnectionString;
 
             if (!ssmParameterManager.TryGetValue(Constants.StorageConnectionStringSSMPath, out storageConnectionString))

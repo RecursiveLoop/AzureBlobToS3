@@ -10,10 +10,11 @@ namespace AzureBlobToS3
 {
     public class AzureManager
     {
-       
+        static CloudBlobClient cloudBlobClient;
         public static List<AzureBlobItem> ListBlobContainer(CloudStorageAccount storageAccount, string ContainerName, string Prefix)
         {
-            CloudBlobClient cloudBlobClient = storageAccount.CreateCloudBlobClient();
+            if (cloudBlobClient == null)
+                cloudBlobClient = storageAccount.CreateCloudBlobClient();
             CloudBlobContainer cloudBlobContainer = cloudBlobClient.GetContainerReference(ContainerName);
 
             Console.WriteLine($"Listing container {ContainerName}");
@@ -31,7 +32,7 @@ namespace AzureBlobToS3
                     if (item.GetType() == typeof(CloudBlockBlob))
                     {
                         CloudBlockBlob blob = (CloudBlockBlob)item;
-                        lstBlobItems.Add(new AzureBlobItem { ContainerName =ContainerName, BlobName = blob.Name, MD5 = blob.Properties.ContentMD5, Size = blob.Properties.Length, ObjectTypeName = typeof(CloudBlockBlob).FullName });
+                        lstBlobItems.Add(new AzureBlobItem { ContainerName = ContainerName, BlobName = blob.Name, MD5 = blob.Properties.ContentMD5, Size = blob.Properties.Length, ObjectTypeName = typeof(CloudBlockBlob).FullName });
                         Console.WriteLine("Block blob {2} of length {0}: {1}, MD5 {3}", blob.Properties.Length, blob.Uri, blob.Name, blob.Properties.ETag);
                     }
                     else if (item.GetType() == typeof(CloudPageBlob))

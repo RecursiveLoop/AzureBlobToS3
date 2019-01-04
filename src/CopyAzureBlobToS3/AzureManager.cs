@@ -10,11 +10,12 @@ namespace CopyAzureBlobToS3
 {
     public class AzureManager
     {
-       
+        static CloudBlobClient cloudBlobClient;
 
         public static void GetBlobStream(CloudStorageAccount storageAccount, string ContainerName, string BlobName, Stream outputStream)
         {
-            CloudBlobClient cloudBlobClient = storageAccount.CreateCloudBlobClient();
+            if (cloudBlobClient == null)
+                cloudBlobClient = storageAccount.CreateCloudBlobClient();
             CloudBlobContainer cloudBlobContainer = cloudBlobClient.GetContainerReference(ContainerName);
 
             var blobRef = cloudBlobContainer.GetBlobReference(BlobName);
