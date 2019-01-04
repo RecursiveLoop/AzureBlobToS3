@@ -9,5 +9,7 @@ namespace Shared
     public class CopyItem
     {
         [DataMember] public AzureBlobItem BlobItem { get; set; }
+
+       
     }
 }

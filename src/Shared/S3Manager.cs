@@ -1,6 +1,8 @@
 ﻿using Amazon.S3.Model;
 using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Net;
 using System.Text;
 
 namespace Shared
@@ -45,6 +47,16 @@ namespace Shared
             return GetS3Items(S3BucketName);
         }
 
+        public static void PutObject(string Key, Stream InputStream)
+        {
+            Amazon.S3.AmazonS3Client s3Client = new Amazon.S3.AmazonS3Client(Amazon.RegionEndpoint.GetBySystemName(S3Region));
+
+            var result = s3Client.PutObjectAsync(new PutObjectRequest { InputStream = InputStream, BucketName = S3BucketName, Key = Key }).GetAwaiter().GetResult();
+
+            if (result.HttpStatusCode != HttpStatusCode.OK)
+                throw new Exception($"Error putting object to S3: {result.HttpStatusCode.ToString()}");
+        }
+
         static List<S3Object> GetS3Items(string S3BucketName)
         {
 
@@ -55,8 +67,6 @@ namespace Shared
             bool isTruncated = false;
             do
             {
-
-
                 var result = s3Client.ListObjectsAsync(new ListObjectsRequest { Marker = nextMarker, BucketName = S3BucketName }).GetAwaiter().GetResult();
                 lstResults.AddRange(result.S3Objects);
 

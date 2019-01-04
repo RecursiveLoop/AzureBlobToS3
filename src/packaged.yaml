@@ -7,12 +7,17 @@ Description: 'Azure Blob to S3 Migration Tool
 Resources:
   AzureBlobToS3:
     Properties:
-      CodeUri: s3://elgin.vsbuilds/4b722d4f924cb79bcd8f5ddc75cc4615
+      CodeUri: s3://elgin.vsbuilds/093f74f5273336b341a9052842ee768d
       Environment:
         Variables:
           ComprehensiveCheck: false
           QueueName:
             Ref: BlobCopyQueue
+      Events:
+        OneMinuteScheduledEvent:
+          Properties:
+            Schedule: rate(1 minute)
+          Type: Schedule
       Handler: AzureBlobToS3::AzureBlobToS3.Function::FunctionHandler
       MemorySize: 1024
       Role:
@@ -77,7 +82,10 @@ Resources:
           - Action:
             - s3:GetObject
             - s3:ListBucket
-            - s3:ListObjects
+            - s3:ListAllMyBuckets
+            - s3:GetObject
+            - s3:PutObject
+            - s3:PutObjectTagging
             Effect: Allow
             Resource:
             - Fn::Join:
@@ -115,7 +123,7 @@ Resources:
     Type: AWS::SQS::Queue
   CopyBlobToS3:
     Properties:
-      CodeUri: s3://elgin.vsbuilds/5e25b1b544e6af3c6b6278c308b1ec45
+      CodeUri: s3://elgin.vsbuilds/bed44334b1f770ba3ba4f739c1d18cba
       Events:
         CopyBlobEvent:
           Properties:

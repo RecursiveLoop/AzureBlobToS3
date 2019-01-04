@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-
+using Amazon.CloudWatch;
+using Amazon.CloudWatch.Model;
 using Amazon.Lambda.Core;
 using Amazon.XRay.Recorder.Handlers.AwsSdk;
 using Microsoft.WindowsAzure.Storage;
@@ -33,6 +35,7 @@ namespace CopyAzureBlobToS3
         public void FunctionHandler(Amazon.Lambda.SQSEvents.SQSEvent sqsEvent, ILambdaContext context)
         {
             SSMParameterManager ssmParameterManager = new SSMParameterManager();
+         
             string storageConnectionString;
 
             if (!ssmParameterManager.TryGetValue(Constants.StorageConnectionStringSSMPath, out storageConnectionString))
@@ -60,10 +63,15 @@ namespace CopyAzureBlobToS3
                         continue;
 
                     Console.WriteLine($"Trying to download item {copyItem.BlobItem.BlobName} from Azure blob storage to S3.");
-
-
-
-
+                    using (MemoryStream msS3Stream = new MemoryStream())
+                    using (BufferedStream stmS3 = new BufferedStream(msS3Stream))
+                    {
+                        
+                        AzureManager.GetBlobStream(storageAccount, copyItem.BlobItem.ContainerName, copyItem.BlobItem.BlobName, stmS3);
+                        S3Manager.PutObject(copyItem.BlobItem.BlobName, stmS3);
+                        Console.WriteLine($"Successfully copied item {copyItem.BlobItem.BlobName} to S3");
+                       
+                    }
                 }
 
             }
